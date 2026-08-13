@@ -1,0 +1,15 @@
+---
+- name: Test Ansible run from Terraform
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Wait for SSH connection
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: Create test file
+      ansible.builtin.copy:
+        dest: /tmp/terraform_ansible_test.txt
+        content: "Created by Ansible from Terraform\n"
+        mode: "0644"
