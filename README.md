@@ -242,3 +242,95 @@ Outputs
 
 И краткий вывод:
 Наш локальный модуль создает одну сеть и подсеть, получает параметры через output и возвращает информацию о подсети обратно в root module.
+
+## Задание 3.
+
+Сначала посмотрим полный список state:
+
+```
+PS C:\Users\Александр\Documents\Project3\ter-homeworks\04\demonstration1\vms> terraform state list
+data.template_file.cloudinit
+module.analytics_vm.data.yandex_compute_image.my_image
+module.analytics_vm.yandex_compute_instance.vm[0]
+module.marketing_vm.data.yandex_compute_image.my_image
+module.marketing_vm.yandex_compute_instance.vm[0]
+module.vpc_dev.yandex_vpc_network.develop
+module.vpc_dev.yandex_vpc_subnet.develop_a
+```
+
+Из вывода видно, что Terraform хранит в state ресурсы двух виртуальных машин и локального модуля vpc_dev.
+
+<img width="744" height="220" alt="image" src="https://github.com/user-attachments/assets/92bffafe-2361-4d98-b107-3b1de215fb2b" />
+
+Удаляем из state модуль vpc_dev:
+
+terraform state rm 'module.vpc_dev'
+
+```
+PS C:\Users\Александр\Documents\Project3\ter-homeworks\04\demonstration1\vms> terraform state rm 'module.vpc_dev'
+Removed module.vpc_dev.yandex_vpc_network.develop
+Removed module.vpc_dev.yandex_vpc_subnet.develop_a
+Successfully removed 2 resource instance(s).
+```
+
+Эта команда удаляет только информацию о Terraform state.
+Удаляем виртуальные машины:
+
+```
+PS C:\Users\Александр\Documents\Project3\ter-homeworks\04\demonstration1\vms> terraform state rm 'module.marketing_vm'
+Removed module.marketing_vm.data.yandex_compute_image.my_image
+Removed module.marketing_vm.yandex_compute_instance.vm[0]
+Successfully removed 2 resource instance(s).
+PS C:\Users\Александр\Documents\Project3\ter-homeworks\04\demonstration1\vms> terraform state rm 'module.analytics_vm'
+Removed module.analytics_vm.data.yandex_compute_image.my_image
+Removed module.analytics_vm.yandex_compute_instance.vm[0]
+Successfully removed 2 resource instance(s).
+```
+<img width="767" height="281" alt="image" src="https://github.com/user-attachments/assets/ce33a916-43c7-406f-96bd-8f25d421c790" />
+
+
+После удалеиня делаем terraform state list:
+
+```
+PS C:\Users\Александр\Documents\Project3\ter-homeworks\04\demonstration1\vms> terraform state list          
+data.template_file.cloudinit      
+```
+
+Остаеться только data.template_file.cloudinit это значит что все наши вирт машины удалены.
+
+Реальные ресурсы в Yandex Cloud всё это время продолжали существовать. Чтобы Terraform снова начал ими управлять, импортировал их обратно по ID:
+
+```
+terraform import 'module.vpc_dev.yandex_vpc_network.develop' enppit0psk208btkn17f
+terraform import 'module.vpc_dev.yandex_vpc_subnet.develop_a' e9bo8cr29bbqosr2k6i0
+terraform import 'module.marketing_vm.yandex_compute_instance.vm[0]' fhmf6kkgn9chfds5bdj9
+terraform import 'module.analytics_vm.yandex_compute_instance.vm[0]' fhm3gjgpee33f5rqtk7i
+```
+
+После импорта проверяем terraform state:
+
+```
+data.template_file.cloudinit
+module.analytics_vm.data.yandex_compute_image.my_image
+module.analytics_vm.yandex_compute_instance.vm[0]
+module.marketing_vm.data.yandex_compute_image.my_image
+module.marketing_vm.yandex_compute_instance.vm[0]
+module.vpc_dev.yandex_vpc_network.develop
+module.vpc_dev.yandex_vpc_subnet.develop_a
+```
+
+Таким образом Terraform снова видит и управляет существующими ресурсами.
+
+И последнее, проверяем terraform plan.
+Получил:
+
+```
+Plan: 0 to add, 2 to change, 0 to destroy.
+```
+
+В итоге ничего не добавляется и не уничтожается.
+Я удалил ресурсы из Terraform state без удаления самих ресурсов в Yandex Cloud, а затем импортировал их обратно и восстановил управление ими через Terraform.
+Задание выполнено!
+
+Задание 4*
+
