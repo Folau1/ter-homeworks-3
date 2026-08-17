@@ -334,3 +334,116 @@ Plan: 0 to add, 2 to change, 0 to destroy.
 
 Задание 4*
 
+Для того, чтобы все переделать как по заданию, нужно сделать следущее:
+Меняем файл vpc/variables.tf:
+
+```
+variable "env_name" {
+  type = string
+}
+
+variable "subnets" {
+  type = list(object({
+    zone = string
+    cidr = string
+  }))
+}
+```
+
+Т.е. делаем подсеть так, чтобы list object был у нас список объектов с где есть zone и cidr.
+После того, как поменяли, переходим в vpc/main.tf
+Здесь нам нужно также изменить подсеть чтобы она была списком.
+И как мы делали и на предыдущих занятиях, и как в лекциях, делаем по принципе for each.
+Т.е. for subnet in var.subnets : subnet.zone => subnet будет у нас как зона : cidr айпи адрес.
+Вот так:
+
+```
+resource "yandex_vpc_subnet" "subnet" {
+  for_each = {
+    for subnet in var.subnets : subnet.zone => subnet
+  }
+
+  name           = "${var.env_name}-${each.value.zone}"
+  zone           = each.value.zone
+  network_id     = yandex_vpc_network.develop.id
+  v4_cidr_blocks = [each.value.cidr]
+}
+```
+
+Ну и ещё нужно поменять var.network_name:
+
+```
+resource "yandex_vpc_network" "develop" {
+  name = var.env_name
+}
+```
+И последнее, делаем знакомую штуку чтобы всё не убивать и не переделывать в vpc/main.tf:
+
+```
+moved {
+  from = yandex_vpc_subnet.develop_a
+  to   = yandex_vpc_subnet.subnet["ru-central1-a"]
+}
+```
+
+Также нам нужно переделать output.tf:
+
+```
+output "network_id" {
+  value = yandex_vpc_network.develop.id
+}
+
+output "subnets" {
+  value = yandex_vpc_subnet.subnet
+}
+```
+И можно обращения делать через module.vpc_dev.network_id и module.vpc_dev.subnets["ru-central1-a"].id
+
+Переделываем module в основном наше main.tf:
+
+```
+module "vpc_dev" {
+  source   = "./vpc"
+  env_name = "develop"
+
+  subnets = [
+    {
+      zone = "ru-central1-a"
+      cidr = "10.0.1.0/24"
+    }
+  ]
+}
+```
+
+Ну а теперь как по заданию от нас требуется, делаем модуль vpc_prod. 
+Задаем параметры:
+
+```
+module "vpc_prod" {
+  source   = "./vpc"
+  env_name = "production"
+
+  subnets = [
+    {
+      zone = "ru-central1-a"
+      cidr = "10.0.1.0/24"
+    },
+    {
+      zone = "ru-central1-b"
+      cidr = "10.0.2.0/24"
+    },
+    {
+      zone = "ru-central1-c"
+      cidr = "10.0.3.0/24"
+    }
+  ]
+}
+```
+Результат из КОнсоли yandex cloud:
+
+```
+NAME ZONE RANGE 
+production-ru-central1-b ru-central1-b [10.0.2.0/24]
+production-ru-central1-a ru-central1-a [10.0.1.0/24]
+production-ru-central1-d ru-central1-d [10.0.3.0/24]
+```
