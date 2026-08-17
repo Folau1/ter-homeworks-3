@@ -447,3 +447,8 @@ production-ru-central1-b ru-central1-b [10.0.2.0/24]
 production-ru-central1-a ru-central1-a [10.0.1.0/24]
 production-ru-central1-d ru-central1-d [10.0.3.0/24]
 ```
+
+В результате один вызов модуля vpc_prod создал одну сеть production и три подсети в переданных зонах доступности.
+
+<img width="762" height="320" alt="image" src="https://github.com/user-attachments/assets/18d9683e-8d60-4b4d-87a3-912b1767c360" />
+
