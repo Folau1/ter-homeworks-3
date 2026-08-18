@@ -31,7 +31,7 @@ module "vpc_prod" {
 }
 
 module "marketing_vm" {
-  source     = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=main"
+  source     = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=de7090ae115ee5059cd81053a808af079c325e01"
   env_name   = "develop"
   network_id = module.vpc_dev.network_id
   subnet_zones = [
@@ -40,10 +40,11 @@ module "marketing_vm" {
   subnet_ids = [
     module.vpc_dev.subnets["ru-central1-a"].id
   ]
-  instance_name  = "marketing"
-  instance_count = 1
-  image_family   = "ubuntu-2004-lts"
-  public_ip      = true
+  instance_name      = "marketing"
+  instance_count     = 1
+  image_family       = "ubuntu-2004-lts"
+  public_ip          = false
+  security_group_ids = [yandex_vpc_security_group.private_vms.id]
 
   labels = {
     project = "marketing"
@@ -57,7 +58,7 @@ module "marketing_vm" {
 }
 
 module "analytics_vm" {
-  source     = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=main"
+  source     = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=de7090ae115ee5059cd81053a808af079c325e01"
   env_name   = "stage"
   network_id = module.vpc_dev.network_id
   subnet_zones = [
@@ -66,10 +67,11 @@ module "analytics_vm" {
   subnet_ids = [
     module.vpc_dev.subnets["ru-central1-a"].id
   ]
-  instance_name  = "analytics"
-  instance_count = 1
-  image_family   = "ubuntu-2004-lts"
-  public_ip      = true
+  instance_name      = "analytics"
+  instance_count     = 1
+  image_family       = "ubuntu-2004-lts"
+  public_ip          = false
+  security_group_ids = [yandex_vpc_security_group.private_vms.id]
 
   labels = {
     project = "analytics"
